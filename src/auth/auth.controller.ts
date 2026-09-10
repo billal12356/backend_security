@@ -3,30 +3,26 @@ import {
   Controller,
   Post,
   Res,
+  Req,
+  UseGuards,
+  Get,
 } from '@nestjs/common';
 
-import type  { Response } from 'express';
+import type { Request, Response } from 'express';
 
 import { AuthService } from './auth.service.js';
 
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 
+import { SessionGuard } from './auth.guard.js';
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  async register(
-    @Body() dto: RegisterDto,
-  ) {
-    return this.authService.register(
-      dto.username,
-      dto.email,
-      dto.password,
-    );
+  async register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto.username, dto.email, dto.password);
   }
 
   @Post('login')
@@ -35,32 +31,57 @@ export class AuthController {
     @Res({ passthrough: true })
     response: Response,
   ) {
-    const result =
-      await this.authService.login(
-        dto.username,
-        dto.password,
-      );
+    const result = await this.authService.login(dto.username, dto.password);
 
-    response.cookie(
-      'session',
-      result.sessionToken,
-      {
-        httpOnly: true,
+    response.cookie('session', result.sessionToken, {
+      httpOnly: true,
 
-        secure:
-          process.env.NODE_ENV ===
-          'production',
+      secure: process.env.NODE_ENV === 'production',
 
-        sameSite: 'lax',
+      sameSite: 'lax',
 
-        expires: result.expiresAt,
+      expires: result.expiresAt,
 
-        path: '/',
-      },
-    );
+      path: '/',
+    });
 
     return {
       user: result.user,
+    };
+  }
+
+  @Get('me')
+  @UseGuards(SessionGuard)
+  getMe(@Req() request: Request) {
+    return {
+      user: request.user,
+    };
+  }
+
+  @Post('logout')
+  async logout(
+    @Req() request: Request,
+    @Res({ passthrough: true })
+    response: Response,
+  ) {
+    const sessionToken = request.cookies?.session;
+
+    if (sessionToken) {
+      await this.authService.logout(sessionToken);
+    }
+
+    response.clearCookie('session', {
+      httpOnly: true,
+
+      secure: process.env.NODE_ENV === 'production',
+
+      sameSite: 'lax',
+
+      path: '/',
+    });
+
+    return {
+      message: 'Logged out successfully',
     };
   }
 }
