@@ -119,4 +119,11 @@ export class AuthService {
       expiresAt: session.expiresAt,
     };
   }
+
+  // logout
+  async logout(sessionToken: string) {
+    const tokenHash = createHash('sha256').update(sessionToken).digest('hex');
+
+    await this.db.delete(sessions).where(eq(sessions.tokenHash, tokenHash));
+  }
 }
