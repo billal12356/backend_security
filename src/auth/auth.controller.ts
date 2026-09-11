@@ -21,11 +21,16 @@ import { Roles } from './decorators/roles.decorator.js';
 import { Role } from './enums/role.enum.js';
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @Post('register')
   async register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto.username, dto.email, dto.password , dto.role);
+    return this.authService.register(
+      dto.username,
+      dto.email,
+      dto.password,
+      dto.role,
+    );
   }
 
   @Post('login')

@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: backend_security_postgres_prod
+    restart: always
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:-postgres}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-billal123}"
+      POSTGRES_DB: "${POSTGRES_DB:-backend_secure}"
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-backend_secure}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend_network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: backend_security_app_prod
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-billal123}@postgres:5432/${POSTGRES_DB:-backend_secure}"
+      SESSION_SECRET: "${SESSION_SECRET:-change_this_to_a_secure_random_secret_in_production}"
+      CORS_ORIGIN: "${CORS_ORIGIN:-http://localhost:3000}"
+    ports:
+      - "${PORT:-3000}:3000"
+    networks:
+      - backend_network
+
+volumes:
+  postgres_prod_data:
+
+networks:
+  backend_network:
+    driver: bridge

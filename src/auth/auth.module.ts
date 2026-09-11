@@ -6,19 +6,10 @@ import { RolesGuard } from './guards/roles.guard.js';
 import { SessionGuard } from './guards/auth.guard.js';
 
 @Module({
-  controllers: [
-    AuthController,
-  ],
+  controllers: [AuthController],
 
-  providers: [
-    AuthService,
-    SessionGuard,
-    RolesGuard,
-  ],
+  providers: [AuthService, SessionGuard, RolesGuard],
 
-  exports: [
-    SessionGuard,
-    RolesGuard,
-  ],
+  exports: [SessionGuard, RolesGuard],
 })
-export class AuthModule { }
+export class AuthModule {}

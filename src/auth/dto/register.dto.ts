@@ -1,6 +1,7 @@
 import {
   IsEmail,
   IsEnum,
+  IsOptional,
   IsString,
   MinLength,
 } from 'class-validator';
@@ -18,6 +19,7 @@ export class RegisterDto {
   @MinLength(8)
   password: string;
 
+  @IsOptional()
   @IsEnum(Role)
-  role:string;
+  role?: Role;
 }

@@ -4,30 +4,32 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-
 import { eq, or } from 'drizzle-orm';
-
 import * as bcrypt from 'bcrypt';
-
 import { createHash, randomBytes } from 'crypto';
-
 import { DATABASE } from '../database/database.provider.js';
-
+import type { DrizzleDB } from '../database/database.provider.js';
 import { users } from '../database/schema/users.schema.js';
 import { sessions } from '../database/schema/sessions.schema.js';
+import { Role } from './enums/role.enum.js';
 
 @Injectable()
 export class AuthService {
   constructor(
     @Inject(DATABASE)
-    private readonly db: any,
+    private readonly db: DrizzleDB,
   ) {}
 
   // register
-  async register(username: string, email: string, password: string,role:string) {
+  async register(
+    username: string,
+    email: string,
+    password: string,
+    role: Role = Role.USER,
+  ) {
     // 1. Check existing user
     const existingUser = await this.db
-      .select()
+      .select({ id: users.id })
       .from(users)
       .where(or(eq(users.username, username), eq(users.email, email)));
 
@@ -45,12 +47,14 @@ export class AuthService {
         username,
         email,
         passwordHash,
-        role
+        role,
       })
       .returning({
         id: users.id,
         username: users.username,
         email: users.email,
+        role: users.role,
+        createdAt: users.createdAt,
       });
 
     return user;
@@ -78,7 +82,7 @@ export class AuthService {
     return user;
   }
 
-  //create session
+  // create session
   async createSession(userId: string) {
     // Generate random token
     const sessionToken = randomBytes(32).toString('hex');
@@ -102,7 +106,7 @@ export class AuthService {
     };
   }
 
-  //login
+  // login
   async login(username: string, password: string) {
     const user = await this.validateUser(username, password);
 
@@ -113,10 +117,9 @@ export class AuthService {
         id: user.id,
         username: user.username,
         email: user.email,
+        role: user.role,
       },
-
       sessionToken: session.sessionToken,
-
       expiresAt: session.expiresAt,
     };
   }
