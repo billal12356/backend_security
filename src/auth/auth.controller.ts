@@ -15,14 +15,17 @@ import { AuthService } from './auth.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 
-import { SessionGuard } from './auth.guard.js';
+import { SessionGuard } from './guards/auth.guard.js';
+import { RolesGuard } from './guards/roles.guard.js';
+import { Roles } from './decorators/roles.decorator.js';
+import { Role } from './enums/role.enum.js';
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('register')
   async register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto.username, dto.email, dto.password);
+    return this.authService.register(dto.username, dto.email, dto.password , dto.role);
   }
 
   @Post('login')
@@ -82,6 +85,15 @@ export class AuthController {
 
     return {
       message: 'Logged out successfully',
+    };
+  }
+
+  @Get('user-area')
+  @UseGuards(SessionGuard, RolesGuard)
+  @Roles(Role.USER)
+  getUserArea() {
+    return {
+      message: 'Welcome USER',
     };
   }
 }

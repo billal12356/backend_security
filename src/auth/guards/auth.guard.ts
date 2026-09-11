@@ -12,10 +12,10 @@ import { createHash } from 'crypto';
 
 import { eq } from 'drizzle-orm';
 
-import { DATABASE } from '../database/database.provider.js';
+import { DATABASE } from '../../database/database.provider.js';
 
-import { sessions } from '../database/schema/sessions.schema.js';
-import { users } from '../database/schema/users.schema.js';
+import { sessions } from '../../database/schema/sessions.schema.js';
+import { users } from '../../database/schema/users.schema.js';
 
 @Injectable()
 export class SessionGuard implements CanActivate {
@@ -99,6 +99,7 @@ export class SessionGuard implements CanActivate {
       id: user.id,
       username: user.username,
       email: user.email,
+      role: user.role,
     };
 
     return true;

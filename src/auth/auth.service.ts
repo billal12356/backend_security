@@ -24,7 +24,7 @@ export class AuthService {
   ) {}
 
   // register
-  async register(username: string, email: string, password: string) {
+  async register(username: string, email: string, password: string,role:string) {
     // 1. Check existing user
     const existingUser = await this.db
       .select()
@@ -45,6 +45,7 @@ export class AuthService {
         username,
         email,
         passwordHash,
+        role
       })
       .returning({
         id: users.id,
